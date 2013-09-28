@@ -1,0 +1,7 @@
+INDEX VERSION 1.126+C:\Users\andreas.grahn\projects\quado\android\.metadata\.plugins\org.eclipse.jdt.core
+3269063458.index
+2021160595.index
+2262566673.index
+2964572949.index
+167649413.index
+685189701.index
