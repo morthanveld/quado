@@ -2,26 +2,31 @@
 #include <AndroidAccessory.h>
 
 #define LED0          13
-
+/*
 // Device To Accessory
 #define DTA_PLAY    0x1
 #define DTA_STOP    0x2
 // Accessory To Device
 #define ATD_NIGHT   0x3
+*/
+#define Q_MODE  4
 
+/*
 int speakerPin = 9;
 int tones[] = { 1915, 1700, 1519, 1432, 1275, 1136, 1014, 956 };
 boolean mute = true;
 int play_tone = 0;
 int play_level = 1;
+*/
 
-
+/*
 int data = 2; 
 int clock = 3;
 int latch = 4;
-
+*/
 
 // RGB LED leads connected to PWM pins
+/*
 const int RED_LED_PIN = 10;
 const int GREEN_LED_PIN = 11;
 const int BLUE_LED_PIN = 12;
@@ -34,9 +39,9 @@ int blues[] = {0, 0, 0x00, 0x32, 0xff, 0x8b, 0xee, 0x3c};
 int lightPin = 0;
 boolean night = false;
 
-
 // Potentiometer
 int potentiometerPin = 3;
+*/
 
 AndroidAccessory acc("GDG Suwon",            // Manufacturer
                      "clavier_aoa",                 // Model
@@ -46,13 +51,16 @@ AndroidAccessory acc("GDG Suwon",            // Manufacturer
                      "0000000012345678");       // Serial
 
 
+/*
 void playTone() {
   digitalWrite(speakerPin, HIGH);
   delayMicroseconds(play_tone / play_level);
   digitalWrite(speakerPin, LOW);
   delayMicroseconds(play_tone / play_level);
 }
+*/
 
+/*
 void setTone(int value) {
   mute = false;
   play_tone = value;
@@ -66,29 +74,32 @@ void setPlayLevel(int value) {
   play_level = value;
 }
 
-
+*/
 /*
  * updateLEDs() - sends the LED states set in ledStates to the 74HC595
  * sequence
  */
+ /*
 void updateLEDs(int value){
   digitalWrite(latch, LOW);     //Pulls the chips latch low
   shiftOut(data, clock, MSBFIRST, value); //Shifts out the 8 bits to the shift register
   digitalWrite(latch, HIGH);   //Pulls the latch high displaying the data
 }
+*/
 
 void setup()
 {
   Serial.begin(115200);
   Serial.print("\r\nADK Started\r\n");
 
-  pinMode(speakerPin, OUTPUT);
+
+//  pinMode(speakerPin, OUTPUT);
   pinMode(LED0, OUTPUT);
-  
+ /* 
   pinMode(data, OUTPUT);
   pinMode(clock, OUTPUT);  
   pinMode(latch, OUTPUT);  
-  
+  */
   // Power On Android Accessory interface and init USB controller
   acc.powerOn();
 }
@@ -97,17 +108,30 @@ void setup()
 void loop()
 {
   byte data[2];
-  if (acc.isConnected()) {
+  
+  if (acc.isConnected()) 
+  {  
     int len = acc.read(data, sizeof(data), 1);
-    if (len > 0) {
-      if (data[0] == DTA_PLAY) {
+    if (len > 0) 
+    {
+
+      if (data[0] == Q_MODE)
+      {
+        digitalWrite(LED0, HIGH);
+      }
+      
+      /*
+      if (data[0] == DTA_PLAY) 
+      {
         setTone(tones[data[1]]);
         updateLEDs(1 << data[1]);
         analogWrite(RED_LED_PIN, reds[data[1]]);
         analogWrite(GREEN_LED_PIN, greens[data[1]]);
         analogWrite(BLUE_LED_PIN, blues[data[1]]);
         Serial.println("play");
-      } else if (data[0] == DTA_STOP) {
+      } 
+      else if (data[0] == DTA_STOP) 
+      {
         turnOffTone();
         updateLEDs(0);
         analogWrite(RED_LED_PIN, 0);
@@ -115,12 +139,20 @@ void loop()
         analogWrite(BLUE_LED_PIN, 0);
         Serial.println("mute");
       }
+      */
     }
     
+    data[0] = 1;
+    data[1] = 2;
+    acc.write(data, 2);
+    
+    /*
     if (!mute) {
       playTone();
     }
+    */
     
+    /*
     int lightLevel = analogRead(lightPin);
     boolean newNight = lightLevel > 700;
     // comment next before release
@@ -134,16 +166,21 @@ void loop()
       acc.write(data, 2);
     }
     night = newNight;
+    */
     
-    
+    /*
     int potention = analogRead(potentiometerPin);
     //Serial.println(potention);
     setPlayLevel(potention / 400);
-    
+    */
+  }
+  else
+  {
+    // Disconnected -> LED
+    digitalWrite(LED0, LOW);
+
   }
   
-  digitalWrite(LED0, LOW);
-
   delay(10);
 }
 

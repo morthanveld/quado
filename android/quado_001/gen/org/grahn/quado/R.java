@@ -20,14 +20,8 @@ public final class R {
         public static final int ic_launcher=0x7f020001;
     }
     public static final class id {
-        public static final int aButton=0x7f080005;
-        public static final int bButton=0x7f080006;
-        public static final int cButton=0x7f080000;
-        public static final int ccButton=0x7f080007;
-        public static final int dButton=0x7f080001;
-        public static final int eButton=0x7f080002;
-        public static final int fButton=0x7f080003;
-        public static final int gButton=0x7f080004;
+        public static final int textOrientation=0x7f080001;
+        public static final int textStatus=0x7f080000;
     }
     public static final class layout {
         public static final int activity_clavier=0x7f030000;
