@@ -23,17 +23,19 @@ import com.android.future.usb.UsbManager;
 
 public class quado extends Activity implements SensorEventListener 
 { 
-	private UsbManager mUsbManager = UsbManager.getInstance(this);
+	private UsbManager mUsbManager;// = UsbManager.getInstance(this);
 
 	private UsbAccessory mAccessory;
 
-	private ParcelFileDescriptor mFileDescriptor;
+/*	private ParcelFileDescriptor mFileDescriptor;
 	private FileOutputStream mOutputStream;
 
 	private BroadcastReceiver mReceiver;
-
+*/
 	private SensorManager mSensorManager;
 	private TextView text;
+	
+//	private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
 
 	public void onCreate(Bundle savedInstanceState)
 	{
@@ -45,7 +47,9 @@ public class quado extends Activity implements SensorEventListener
         text = (TextView) findViewById(R.id.textView1);
         text.setText("apa");
         
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); 
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        
+        
   	}
 
 	@Override
@@ -53,11 +57,23 @@ public class quado extends Activity implements SensorEventListener
 	{
 		text.setText("onResume()");
 		super.onResume();
-		mSensorManager.registerListener(this,
-		        mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_NORMAL);
+		mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_NORMAL);
 
-		setupDetachingAccessoryHandler();
-		reOpenAccessoryIfNecessary();
+		mUsbManager = UsbManager.getInstance(this);
+		
+		text.setText(mUsbManager.getAccessoryList().length);
+/*
+        UsbAccessory acc = mUsbManager.getAccessoryList()[0];
+
+        if (!mUsbManager.hasPermission(acc))
+        {
+        	text.setText("no permission");
+        }
+        else
+        {
+        	text.setText("permission");
+        }
+        */
 	}
 	
 	protected void onPause()
@@ -66,86 +82,7 @@ public class quado extends Activity implements SensorEventListener
 	    mSensorManager.unregisterListener(this);
 	}
 
-	private void reOpenAccessoryIfNecessary() 
-	{
-		text.setText("reOpenAccessory()");
-		if (mOutputStream != null) 
-		{
-			return;
-		}
-
-		Intent intent = getIntent();
-		String action = intent.getAction();
-		if (UsbManager.ACTION_USB_ACCESSORY_ATTACHED.equals(action)) 
-		{
-			mAccessory = UsbManager.getAccessory(intent);
-			openAccessory();
-		}
-	}
-
-	private void openAccessory() 
-	{
-		try 
-		{
-			mFileDescriptor = mUsbManager.openAccessory(mAccessory);
-			if (mFileDescriptor != null) 
-			{
-				FileDescriptor fd = mFileDescriptor.getFileDescriptor();
-				mOutputStream = new FileOutputStream(fd);
-			}
-		} 
-		catch (IllegalArgumentException ex) 
-		{
-			// Accessory detached while activity was inactive
-			closeAccessory();
-		}
-	}
-
-	private void setupDetachingAccessoryHandler() 
-	{
-		mReceiver = new BroadcastReceiver() 
-		{
-			@Override
-			public void onReceive(Context context, Intent intent) 
-			{
-				String action = intent.getAction();
-				if (UsbManager.ACTION_USB_ACCESSORY_DETACHED.equals(action)) 
-				{
-					closeAccessory();
-					finish();
-				}
-			}
-		};
-
-		IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
-		registerReceiver(mReceiver, filter);
-	}
-
-	private void closeAccessory() 
-	{
-		try 
-		{
-			if (mOutputStream != null) 
-			{
-				mOutputStream.close();
-			}
-			if (mFileDescriptor != null) 
-			{
-				mFileDescriptor.close();
-			}
-		} 
-		catch (IOException e) 
-		{	
-		} 
-		finally 
-		{
-			mOutputStream = null;
-			mFileDescriptor = null;
-			mAccessory = null;
-		}
-	}
-
-	private void sendCommand(byte command) 
+/*	private void sendCommand(byte command) 
 	{
 		if (mOutputStream != null) 
 		{
@@ -159,12 +96,12 @@ public class quado extends Activity implements SensorEventListener
 			}
 		}
 	}
-
+*/
 	@Override
 	public void onAccuracyChanged(Sensor arg0, int arg1) 
 	{
 		// TODO Auto-generated method stub
-		text.setText("onAccuracy()");
+		//text.setText("onAccuracy()");
 	}
 
 	@Override
@@ -179,11 +116,11 @@ public class quado extends Activity implements SensorEventListener
 			float z = values[2];
 			byte A = 'A';
 			byte n = '\n';
-			sendCommand(A);
-			sendCommand(n);
+			//sendCommand(A);
+			//sendCommand(n);
 			
 	        //Sets the new text to TextView (runtime click event)
-			text.setText(String.format("%.2f", x) + "\n" + String.format("%.2f", y) + "\n" + String.format("%.2f", z));
+			//text.setText(String.format("%.2f", x) + "\n" + String.format("%.2f", y) + "\n" + String.format("%.2f", z));
 		}
 		else if (event.sensor.getType() == Sensor.TYPE_ORIENTATION) 
 		{
@@ -193,11 +130,11 @@ public class quado extends Activity implements SensorEventListener
 			float z = values[2];
 			byte A = 'A';
 			byte n = '\n';
-			sendCommand(A);
-			sendCommand(n);
+			//sendCommand(A);
+			//sendCommand(n);
 			
 	        //Sets the new text to TextView (runtime click event)
-			text.setText(String.format("%.2f", x) + "\n" + String.format("%.2f", y) + "\n" + String.format("%.2f", z));
+			//text.setText(String.format("%.2f", x) + "\n" + String.format("%.2f", y) + "\n" + String.format("%.2f", z));
 		}
 	}
 }

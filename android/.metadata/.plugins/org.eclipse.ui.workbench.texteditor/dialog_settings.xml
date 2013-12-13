@@ -13,12 +13,16 @@
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="false" key="wholeword"/>
-		<item value="" key="selection"/>
+		<item value="Accessory is" key="selection"/>
 		<list key="findhistory">
+			<item value="accessory is"/>
+			<item value="accessory"/>
+			<item value="TAG"/>
+			<item value="mUsbReceiver"/>
+			<item value="openacce"/>
+			<item value="getParcela"/>
+			<item value="onRetain"/>
 			<item value="mInput"/>
-			<item value="minput"/>
-			<item value="minpurt"/>
-			<item value="receiver"/>
 		</list>
 		<list key="replacehistory">
 		</list>
