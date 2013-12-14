@@ -38,11 +38,25 @@ public class ClavierActivity extends Activity implements Runnable
     private static final int MSG_RUNNING = 10;
 
     // Device To Accessory
-    private static final byte DTA_PLAY = (byte) 1;
+   /* private static final byte DTA_PLAY = (byte) 1;
     private static final byte DTA_STOP = (byte) 2;
 
     // Accessory To Device
-    private static final byte ATD_NIGHT = (byte) 3;
+    private static final byte ATD_NIGHT = (byte) 3;*/
+    
+    private static final byte MSG_SIZE = (byte) 8;
+    
+    // Android msg.
+    private static final byte HEARTBEAT = (byte) 0x1;
+    private static final byte MOTOR = (byte) 0x2;
+    
+    // Arduino msg.
+    private static final byte STATUS = (byte) 0xA;
+    private static final byte SENSOR = (byte) 0xB;
+    
+    // Arduino status.
+    private static final byte NOT_READY = (byte) 0x0;
+    private static final byte READY = (byte) 0x1;
 
     private boolean mPermissionRequestPending = false;
     private UsbManager mUsbManager = null;
@@ -53,12 +67,11 @@ public class ClavierActivity extends Activity implements Runnable
 
     private PendingIntent mPermissionIntent;
     
-    // save
-    private static final byte DTA_MODE = (byte) 4;
+    //private static final byte DTA_MODE = (byte) 4;
     private TextView textStatus;
     private TextView textOrientation;
-    private boolean online = false;
-    // end
+    
+    private boolean mReady = false;
 
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() 
     {
@@ -238,7 +251,7 @@ public class ClavierActivity extends Activity implements Runnable
         @Override
         public boolean onTouch(View v, MotionEvent event) 
         {
-            if (mOutputStream == null) 
+/*            if (mOutputStream == null) 
             {
                 return false;
             }
@@ -270,6 +283,7 @@ public class ClavierActivity extends Activity implements Runnable
                 Log.e(TAG, "write failed", e);
                 return false;
             }
+            */
             return false;
         }
     };
@@ -281,15 +295,26 @@ public class ClavierActivity extends Activity implements Runnable
     public void run() 
     {
         int ret = 0;
-        byte[] buffer = new byte[16384];
+        /*byte[] buffer = new byte[MSG_SIZE];
         int i;
+        */
         
         Message mag = Message.obtain(mHandler, MSG_RUNNING);
         mag.obj = Integer.valueOf(101);
         mHandler.sendMessage(mag);
         
-        while (ret >= 0) 
+        while (true) 
         {
+        	if (mReady == false)
+        	{
+        		send(HEARTBEAT, (byte)0, (byte)0);
+        		read();
+        	}
+        	else   	
+        	{
+        		send(MOTOR, (byte)0, (byte)0);
+        		read();
+        	}
         	/*
             try 
             {
@@ -321,12 +346,10 @@ public class ClavierActivity extends Activity implements Runnable
                 }
             }
             */
-        	
-        	send();
-            
+        	           
             try 
             {
-				Thread.sleep(100);
+				Thread.sleep(1000);
 			} 
             catch (InterruptedException e) 
             {
@@ -335,17 +358,52 @@ public class ClavierActivity extends Activity implements Runnable
         }
     }
     
-    private void send()
+    private void send(byte type, byte index, byte value)
     {
-    	byte code = 4;
-        try 
+    	byte msg[] = new byte[MSG_SIZE];
+    	
+    	msg[0] = type;
+    	msg[1] = index;
+    	msg[2] = value;
+
+    	try 
         {
-            mOutputStream.write(code);
+            mOutputStream.write(msg);
         } 
         catch (IOException e) 
         {
             Log.e(TAG, "write failed", e);
         }
+    }
+    
+    private void read()
+    {
+    	int ret = 0;
+        byte[] buffer = new byte[MSG_SIZE];
+        try 
+        {
+			ret = mInputStream.read(buffer, 0, MSG_SIZE);
+					
+			if (ret > 0)
+			{
+				if (buffer[0] == STATUS)
+				{
+					// Status from Arduino.
+					if (buffer[1] == READY)
+					{
+						mReady = true;
+					}
+				}
+				else if (buffer[0] == SENSOR)
+				{
+					// Sensor from Arduino.
+				}
+			}
+		} 
+        catch (IOException e) 
+        {
+			e.printStackTrace();
+		}
     }
 
     /**
