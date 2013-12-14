@@ -7,15 +7,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.ParcelFileDescriptor;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
-import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,21 +30,13 @@ import java.io.IOException;
 
 import org.grahn.quado.R;
 
-public class ClavierActivity extends Activity implements Runnable 
+public class ClavierActivity extends Activity implements Runnable, SensorEventListener 
 {
 
     private static final String TAG = "ClavierAOA";
     private static final String ACTION_USB_PERMISSION = "org.grahn.quado.USB_PERMISSION";
-    private static final int MESSAGE_NIGHT = 1;
-    private static final int MSG_RUNNING = 10;
-
-    // Device To Accessory
-   /* private static final byte DTA_PLAY = (byte) 1;
-    private static final byte DTA_STOP = (byte) 2;
-
-    // Accessory To Device
-    private static final byte ATD_NIGHT = (byte) 3;*/
-    
+    private static final int MSG_INFO = 10;
+   
     private static final byte MSG_SIZE = (byte) 8;
     
     // Android msg.
@@ -72,6 +65,14 @@ public class ClavierActivity extends Activity implements Runnable
     private TextView textOrientation;
     
     private boolean mReady = false;
+    
+    private SensorManager mSensorManager;
+    private Sensor accelerometer;
+    private Sensor magnetometer;
+    float[] mGravity;
+    float[] mGeomagnetic;
+    Float azimut;
+    float mOrientation[] = new float[3];
 
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() 
     {
@@ -115,6 +116,7 @@ public class ClavierActivity extends Activity implements Runnable
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_clavier);
 
+        // Android Accessory
         mUsbManager = UsbManager.getInstance(this);
         mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
@@ -126,7 +128,13 @@ public class ClavierActivity extends Activity implements Runnable
             mAccessory = (UsbAccessory) getLastNonConfigurationInstance();
             openAccessory(mAccessory);
         }
+        
+        // Sensor Manager
+        mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        magnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
+        // User Interface
         textStatus = (TextView) findViewById(R.id.textStatus);
         textStatus.setText("Offline");
         textStatus.setKeyListener(null);
@@ -153,6 +161,9 @@ public class ClavierActivity extends Activity implements Runnable
     public void onResume() 
     {
         super.onResume();
+        
+        mSensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI);
 
         if (mInputStream != null && mOutputStream != null) 
         {
@@ -190,6 +201,8 @@ public class ClavierActivity extends Activity implements Runnable
     {
         unregisterReceiver(mUsbReceiver);
         super.onDestroy();
+        
+        mSensorManager.unregisterListener(this);
     }
 
     @Override
@@ -246,110 +259,36 @@ public class ClavierActivity extends Activity implements Runnable
         }
     }
 
-    View.OnTouchListener mTouchListener = new View.OnTouchListener() 
-    {
-        @Override
-        public boolean onTouch(View v, MotionEvent event) 
-        {
-/*            if (mOutputStream == null) 
-            {
-                return false;
-            }
-
-            // Make packet
-            byte[] buffer = new byte[2];
-            if (event.getAction() == MotionEvent.ACTION_DOWN) 
-            {
-                buffer[0] = DTA_PLAY;
-                //buffer[1] = (byte) TONE_MAPPING.get(v.getId()).intValue();
-            } 
-            else if (event.getAction() == MotionEvent.ACTION_UP) 
-            {
-                buffer[0] = DTA_STOP;
-                buffer[1] = 0;
-            } 
-            else 
-            {
-                return false;
-            }
-
-            // Send packet
-            try 
-            {
-                mOutputStream.write(buffer);
-            } 
-            catch (IOException e) 
-            {
-                Log.e(TAG, "write failed", e);
-                return false;
-            }
-            */
-            return false;
-        }
-    };
-
     /**
      * Listen accessory's voice
      */
     @Override
     public void run() 
     {
-        int ret = 0;
-        /*byte[] buffer = new byte[MSG_SIZE];
-        int i;
-        */
-        
-        Message mag = Message.obtain(mHandler, MSG_RUNNING);
-        mag.obj = Integer.valueOf(101);
-        mHandler.sendMessage(mag);
-        
         while (true) 
         {
         	if (mReady == false)
         	{
+                Message mag = Message.obtain(mHandler, MSG_INFO);
+                mag.obj = new String("waiting for arduino");
+                mHandler.sendMessage(mag);
+
         		send(HEARTBEAT, (byte)0, (byte)0);
         		read();
         	}
         	else   	
         	{
-        		send(MOTOR, (byte)0, (byte)0);
+        		byte a = (byte)Math.max(mOrientation[1] / (float)Math.PI * 255.0f, 0.0f);
+        		byte b = (byte)Math.max(-mOrientation[1] / (float)Math.PI * 255.0f, 0.0f); 
+        		byte c = (byte)Math.max(mOrientation[2] / (float)Math.PI * 255.0f, 0.0f);
+        		byte d = (byte)Math.max(-mOrientation[2] / (float)Math.PI * 255.0f, 0.0f);
+        		sendMotor(a, b, c, d);
         		read();
         	}
-        	/*
+        
             try 
             {
-                ret = mInputStream.read(buffer);
-                
-            } 
-            catch (IOException e) 
-            {
-                break;
-            }
-         
-            i = 0;
-            while (i < ret) 
-            {
-                int len = ret - i;
-
-                
-                switch (buffer[i]) 
-                {
-                    case ATD_NIGHT:
-                        if (len >= 2) 
-                        {
-                            Message m = Message.obtain(mHandler, MESSAGE_NIGHT);
-                            m.obj = Integer.valueOf(buffer[i + 1]);
-                            mHandler.sendMessage(m);
-                        }
-                        i += 2;
-                        break;
-                }
-            }
-            */
-        	           
-            try 
-            {
-				Thread.sleep(1000);
+				Thread.sleep(100);
 			} 
             catch (InterruptedException e) 
             {
@@ -365,6 +304,26 @@ public class ClavierActivity extends Activity implements Runnable
     	msg[0] = type;
     	msg[1] = index;
     	msg[2] = value;
+
+    	try 
+        {
+            mOutputStream.write(msg);
+        } 
+        catch (IOException e) 
+        {
+            Log.e(TAG, "write failed", e);
+        }
+    }
+    
+    private void sendMotor(byte a, byte b, byte c, byte d)
+    {
+    	byte msg[] = new byte[MSG_SIZE];
+    	
+    	msg[0] = MOTOR;
+    	msg[1] = a;
+    	msg[2] = b;
+    	msg[3] = c;
+    	msg[4] = d;
 
     	try 
         {
@@ -416,25 +375,48 @@ public class ClavierActivity extends Activity implements Runnable
         {
             switch (msg.what) 
             {
-                case MESSAGE_NIGHT:
-                    if ((Integer) msg.obj > 0) 
-                    {
-                        Toast.makeText(ClavierActivity.this, "It's night! I'm going HOME!", Toast.LENGTH_SHORT).show();
-                        //enableButtons(false);
-                    } 
-                    else
-                    {
-                        Toast.makeText(ClavierActivity.this, "Good morning! Give me some creative work!", Toast.LENGTH_SHORT).show();
-                        //enableButtons(true);
-                    }
-                    break;
-                case MSG_RUNNING:
+                case MSG_INFO:
                 {
                 	TextView txt = (TextView) findViewById(R.id.textOrientation);
-                    txt.setText("running");
+                    txt.setText((String)msg.obj);
                 	break;
                 }
             }
         }
     };
+
+	@Override
+	public void onAccuracyChanged(Sensor sensor, int accuracy) 
+	{
+	}
+
+	@Override
+	public void onSensorChanged(SensorEvent event) 
+	{
+		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+		{
+			mGravity = event.values;
+		}
+		
+		if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+		{
+			mGeomagnetic = event.values;
+		}
+		
+		if (mGravity != null && mGeomagnetic != null) 
+		{
+			float R[] = new float[9];
+			float I[] = new float[9];
+			boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+			if (success) 
+			{
+				SensorManager.getOrientation(R, mOrientation);
+				azimut = mOrientation[0]; // orientation contains: azimut, pitch and roll
+				
+		        Message mag = Message.obtain(mHandler, MSG_INFO);
+		        mag.obj = new String(mOrientation[0] + " " + mOrientation[1] + " " + mOrientation[2]);
+		        mHandler.sendMessage(mag);
+			}
+		}
+	}
 }

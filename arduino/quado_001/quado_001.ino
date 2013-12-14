@@ -34,6 +34,8 @@ void setup()
   pinMode(LED0, OUTPUT);
   pinMode(MOTOR_A, OUTPUT);
   pinMode(MOTOR_B, OUTPUT);
+  pinMode(MOTOR_C, OUTPUT);
+  pinMode(MOTOR_D, OUTPUT);
 
   // Power On Android Accessory interface and init USB controller
   acc.powerOn();
@@ -47,7 +49,7 @@ void sendStatus(byte status)
   acc.write(buffer, MSG_SIZE);
 }
 
-void sendSensor(byte sensor)
+void sendSensor()
 {
   byte buffer[MSG_SIZE];
   buffer[0] = SENSOR;
@@ -59,9 +61,6 @@ void loop()
 {
   byte data[MSG_SIZE];
   
-  digitalWrite(MOTOR_A, LOW);
-  digitalWrite(MOTOR_B, LOW);
-  
   if (acc.isConnected()) 
   {  
     digitalWrite(LED0, HIGH);
@@ -72,13 +71,19 @@ void loop()
     {
       if (data[0] == HEARTBEAT)
       {
-        digitalWrite(MOTOR_A, HIGH);
+        analogWrite(MOTOR_A, 255);
+        analogWrite(MOTOR_B, 255);
+        analogWrite(MOTOR_C, 255);
+        analogWrite(MOTOR_D, 255);
         sendStatus(READY);
       }   
       else if (data[0] == MOTOR)
       {
-        digitalWrite(MOTOR_B, HIGH);
-        sendSensor(0);
+        analogWrite(MOTOR_A, data[1]);
+        analogWrite(MOTOR_B, data[2]);
+        analogWrite(MOTOR_C, data[3]);
+        analogWrite(MOTOR_D, data[4]);
+        sendSensor();
       }
     }
     
@@ -91,8 +96,10 @@ void loop()
   else
   {
     digitalWrite(LED0, LOW);
-    digitalWrite(MOTOR_A, LOW);
-    digitalWrite(MOTOR_B, LOW);
+    analogWrite(MOTOR_A, 0);
+    analogWrite(MOTOR_B, 0);
+    analogWrite(MOTOR_C, 0);
+    analogWrite(MOTOR_D, 0);
   }
   
   delay(10);
