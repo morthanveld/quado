@@ -26,6 +26,7 @@ public class MultitouchView extends View {
   private Drawable myImage;
   
   private Joystick rightJoystick;
+  private Joystick leftJoystick;
 
 
   public MultitouchView(Context context, AttributeSet attrs) {
@@ -35,7 +36,8 @@ public class MultitouchView extends View {
     Resources res = context.getResources();
     myImage = res.getDrawable(R.drawable.joystick_frame);
     
-    rightJoystick = new Joystick(context, 0.7f, 0.7f);
+    rightJoystick = new Joystick(context, 0.8f, 0.7f);
+    leftJoystick = new Joystick(context, 0.2f, 0.7f);
   }
 
   private void initView() {
@@ -49,52 +51,11 @@ public class MultitouchView extends View {
   }
 
   @Override
-  public boolean onTouchEvent(MotionEvent event) {
-
-    // get pointer index from the event object
-    int pointerIndex = event.getActionIndex();
-
-    // get pointer ID
-    int pointerId = event.getPointerId(pointerIndex);
-
-    // get masked (not specific to a pointer) action
-    int maskedAction = event.getActionMasked();
-
-    switch (maskedAction) {
-
-    case MotionEvent.ACTION_DOWN:
-    case MotionEvent.ACTION_POINTER_DOWN: 
-    {
-      // We have a new pointer. Lets add it to the list of pointers
-
-      PointF f = new PointF();
-      f.x = event.getX(pointerIndex);
-      f.y = event.getY(pointerIndex);
-      mActivePointers.put(pointerId, f);
-      
-      rightJoystick.motionEvent(f);
-      
-      break;
-    }
-    case MotionEvent.ACTION_MOVE: { // a pointer was moved
-      for (int size = event.getPointerCount(), i = 0; i < size; i++) {
-        PointF point = mActivePointers.get(event.getPointerId(i));
-        if (point != null) {
-          point.x = event.getX(i);
-          point.y = event.getY(i);
-          
-          rightJoystick.motionEvent(point);
-        }
-      }
-      break;
-    }
-    case MotionEvent.ACTION_UP:
-    case MotionEvent.ACTION_POINTER_UP:
-    case MotionEvent.ACTION_CANCEL: {
-      mActivePointers.remove(pointerId);
-      break;
-    }
-    }
+  public boolean onTouchEvent(MotionEvent event) 
+  {
+    rightJoystick.motionEvent(event);
+    leftJoystick.motionEvent(event);
+    
     invalidate();
 
     return true;
@@ -103,32 +64,14 @@ public class MultitouchView extends View {
   @Override
   protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
-    
-    int width = 350;
-    /*
-    canvas.save();
-    canvas.translate(canvas.getWidth() - width, canvas.getHeight() - width);
-    myImage.setBounds(0, 0, width, width);
-    myImage.draw(canvas);
-    canvas.restore();
-    
-    canvas.translate(0, canvas.getHeight() - width);
-    myImage.setBounds(0, 0, width, width);
-    myImage.draw(canvas);
-    canvas.restore();
-*/
-    
+        
     rightJoystick.draw(canvas);
+    leftJoystick.draw(canvas);
 
-    // draw all pointers
-    for (int size = mActivePointers.size(), i = 0; i < size; i++) {
-      PointF point = mActivePointers.valueAt(i);
-      if (point != null)
-        mPaint.setColor(colors[i % 9]);
-      canvas.drawCircle(point.x, point.y, SIZE, mPaint);
-    }
-    canvas.drawText("Total pointers: " + mActivePointers.size(), 10, 40 , textPaint);
-    
+    canvas.drawText("Pitch: " + 12.5f, 10, 40 , textPaint);   
+    canvas.drawText("Yaw: " + 12.5f, 10, 60 , textPaint);
+    canvas.drawText("Value: " + rightJoystick.getSignalValue().x + " " + rightJoystick.getSignalValue().y, 10, 80 , textPaint);
+    canvas.drawText("Debug: " + rightJoystick.getDebugString(), 10, 100 , textPaint);
   }
 
 } 
