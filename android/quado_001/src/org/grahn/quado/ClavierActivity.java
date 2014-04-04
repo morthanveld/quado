@@ -11,10 +11,12 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.ParcelFileDescriptor;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.TextView;
@@ -27,6 +29,8 @@ import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import org.grahn.quado.R;
 
@@ -73,6 +77,9 @@ public class ClavierActivity extends Activity implements Runnable, SensorEventLi
     float[] mGeomagnetic;
     Float azimut;
     float mOrientation[] = new float[3];
+    
+    private WifiConnection wifiConnection;
+    private Server server;
 
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() 
     {
@@ -142,6 +149,19 @@ public class ClavierActivity extends Activity implements Runnable, SensorEventLi
         textOrientation = (TextView) findViewById(R.id.textOrientation);
         textOrientation.setKeyListener(null);
         textOrientation.setText("start");
+        
+        TextView wifiStatus = (TextView) findViewById(R.id.wifiStatus);
+        
+        // Create wifi connection.
+        /*WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        wifiConnection = new WifiConnection(wifiManager, wifiStatus);
+        registerReceiver(wifiConnection, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+        wifiConnection.connect();
+        */
+        
+        TextView serverStatus = (TextView) findViewById(R.id.serverStatus);
+        
+        server = new Server(serverStatus);
     }
 
     @Override
@@ -199,6 +219,9 @@ public class ClavierActivity extends Activity implements Runnable, SensorEventLi
     @Override
     public void onDestroy() 
     {
+    	// Close network.
+    	server.destroy();
+    	
         unregisterReceiver(mUsbReceiver);
         super.onDestroy();
         

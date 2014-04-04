@@ -12,7 +12,8 @@ import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 
-public class MultitouchView extends View {
+public class MultitouchView extends View 
+{
 
   private static final int SIZE = 60;
 
@@ -27,9 +28,12 @@ public class MultitouchView extends View {
   
   private Joystick rightJoystick;
   private Joystick leftJoystick;
+  
+  private Client client;
 
 
-  public MultitouchView(Context context, AttributeSet attrs) {
+  public MultitouchView(Context context, AttributeSet attrs) 
+  {
     super(context, attrs);
     initView();
     
@@ -39,8 +43,14 @@ public class MultitouchView extends View {
     rightJoystick = new Joystick(context, 0.8f, 0.7f);
     leftJoystick = new Joystick(context, 0.2f, 0.7f);
   }
+  
+  public void registerClient(Client client)
+  {
+	  this.client = client;
+  }
 
-  private void initView() {
+  private void initView() 
+  {
     mActivePointers = new SparseArray<PointF>();
     mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     // set painter color to a color you like
@@ -62,7 +72,8 @@ public class MultitouchView extends View {
   }
 
   @Override
-  protected void onDraw(Canvas canvas) {
+  protected void onDraw(Canvas canvas) 
+  {
     super.onDraw(canvas);
         
     rightJoystick.draw(canvas);
@@ -72,6 +83,20 @@ public class MultitouchView extends View {
     canvas.drawText("Yaw: " + 12.5f, 10, 60 , textPaint);
     canvas.drawText("Value: " + rightJoystick.getSignalValue().x + " " + rightJoystick.getSignalValue().y, 10, 80 , textPaint);
     canvas.drawText("Debug: " + rightJoystick.getDebugString(), 10, 100 , textPaint);
+    
+    if (this.client != null)
+    {
+    	// Compile signal data.
+    	PointF r = rightJoystick.getSignalValue();
+    	PointF l = leftJoystick.getSignalValue();
+    	byte[] data = new byte[4];
+    	data[0] = (byte) ((r.x + 1.0f) / 2.0f * 255.0f);
+    	data[1] = (byte) ((r.y + 1.0f) / 2.0f * 255.0f);
+    	data[2] = (byte) ((l.x + 1.0f) / 2.0f * 255.0f);
+    	data[3] = (byte) ((l.y + 1.0f) / 2.0f * 255.0f);
+    	    	
+    	this.client.setOutputData(data);
+    }
   }
 
 } 

@@ -20,8 +20,10 @@ public final class R {
         public static final int ic_launcher=0x7f020001;
     }
     public static final class id {
+        public static final int serverStatus=0x7f080003;
         public static final int textOrientation=0x7f080001;
         public static final int textStatus=0x7f080000;
+        public static final int wifiStatus=0x7f080002;
     }
     public static final class layout {
         public static final int activity_clavier=0x7f030000;

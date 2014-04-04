@@ -26,8 +26,9 @@ public final class R {
         public static final int joystick_frame=0x7f020002;
     }
     public static final class id {
-        public static final int action_settings=0x7f080001;
+        public static final int action_settings=0x7f080002;
         public static final int multitouchView1=0x7f080000;
+        public static final int wifiStatus=0x7f080001;
     }
     public static final class layout {
         public static final int activity_main=0x7f030000;
