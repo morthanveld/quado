@@ -1,0 +1,15 @@
+Message Format
+
+byte [-127,127]
+
+| byte 0 | byte 1 | byte 2 | byte 3 | byte 4 | byte 5 | byte 6 | byte 7 |
+-------------------------------------------------------------------------
+
+From Flight Control
+
+| x1     | y1     | x2     | y2     |        |        |        |        |
+
+
+From Quado
+
+| yaw    | pitch  | roll   |        |        |        |        |        |

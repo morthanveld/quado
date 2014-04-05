@@ -436,9 +436,9 @@ public class ClavierActivity extends Activity implements Runnable, SensorEventLi
 				SensorManager.getOrientation(R, mOrientation);
 				azimut = mOrientation[0]; // orientation contains: azimut, pitch and roll
 				
-		        Message mag = Message.obtain(mHandler, MSG_INFO);
-		        mag.obj = new String(mOrientation[0] + " " + mOrientation[1] + " " + mOrientation[2]);
-		        mHandler.sendMessage(mag);
+		        //Message mag = Message.obtain(mHandler, MSG_INFO);
+		        //mag.obj = new String(mOrientation[0] + " " + mOrientation[1] + " " + mOrientation[2]);
+		        //mHandler.sendMessage(mag);
 			}
 		}
 	}

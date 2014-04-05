@@ -89,12 +89,17 @@ public class MultitouchView extends View
     	// Compile signal data.
     	PointF r = rightJoystick.getSignalValue();
     	PointF l = leftJoystick.getSignalValue();
-    	byte[] data = new byte[4];
-    	data[0] = (byte) ((r.x + 1.0f) / 2.0f * 255.0f);
-    	data[1] = (byte) ((r.y + 1.0f) / 2.0f * 255.0f);
-    	data[2] = (byte) ((l.x + 1.0f) / 2.0f * 255.0f);
-    	data[3] = (byte) ((l.y + 1.0f) / 2.0f * 255.0f);
-    	    	
+    	
+    	byte[] data = new byte[8];
+    	data[0] = (byte) (((r.x + 1.0f) / 2.0f) * 127.0f);
+    	data[1] = (byte) (((r.y + 1.0f) / 2.0f) * 127.0f);
+    	data[2] = (byte) (((l.x + 1.0f) / 2.0f) * 127.0f);
+    	data[3] = (byte) (((l.y + 1.0f) / 2.0f) * 127.0f);
+    	data[4] = 0;
+    	data[5] = 0;
+    	data[6] = 0;
+    	data[7] = 0;
+    	   	    	
     	this.client.setOutputData(data);
     }
   }
