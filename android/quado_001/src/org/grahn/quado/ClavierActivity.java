@@ -80,6 +80,7 @@ public class ClavierActivity extends Activity implements Runnable, SensorEventLi
     
     private WifiConnection wifiConnection;
     private Server server;
+    private FlightSystem flightSystem;
 
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() 
     {
@@ -162,6 +163,10 @@ public class ClavierActivity extends Activity implements Runnable, SensorEventLi
         TextView serverStatus = (TextView) findViewById(R.id.serverStatus);
         
         server = new Server(serverStatus);
+        
+        
+        // Create flight system.
+        flightSystem = new FlightSystem();
     }
 
     @Override
@@ -301,11 +306,24 @@ public class ClavierActivity extends Activity implements Runnable, SensorEventLi
         	}
         	else   	
         	{
+        		/*
         		byte a = (byte)Math.max(mOrientation[1] / (float)Math.PI * 255.0f, 0.0f);
         		byte b = (byte)Math.max(-mOrientation[1] / (float)Math.PI * 255.0f, 0.0f); 
         		byte c = (byte)Math.max(mOrientation[2] / (float)Math.PI * 255.0f, 0.0f);
         		byte d = (byte)Math.max(-mOrientation[2] / (float)Math.PI * 255.0f, 0.0f);
-        		sendMotor(a, b, c, d);
+        		*/
+        		
+        		Vector3 orientation = new Vector3();
+        		Vector3 acceleration = new Vector3();
+        		Vector3 targetPose = new Vector3();
+        		
+        		flightSystem.update(orientation, acceleration, targetPose);
+        		
+        		float[] thrust = flightSystem.getThrust();
+        		byte[] input = server.getInputData();
+        		
+        		sendMotor(input[0], input[1], input[2], input[3]);
+        		//sendMotor((byte)(thrust[0] * 255.0f), (byte)(thrust[1] * 255.0f), (byte)(thrust[2] * 255.0f), (byte)(thrust[3] * 255.0f));
         		read();
         	}
         
